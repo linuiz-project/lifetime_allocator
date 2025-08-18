@@ -8,6 +8,10 @@ use core::{
 };
 use zerocopy::FromZeros;
 
+#[derive(Debug, thiserror::Error)]
+#[error("an allocation error occurred")]
+pub struct AllocError;
+
 pub struct AllocPtr<'a, T: ?Sized, A: Allocator> {
     obj: NonNull<T>,
     allocator: A,

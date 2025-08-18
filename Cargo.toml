@@ -5,3 +5,4 @@ edition = "2024"
 
 [dependencies]
 zerocopy = { version = "0.8", default-features = false }
+thiserror = { version = "2.0", default-features = false }
