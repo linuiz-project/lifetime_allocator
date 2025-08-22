@@ -6,7 +6,6 @@ use core::{
     ops::{Deref, DerefMut},
     ptr::NonNull,
 };
-use zerocopy::FromZeros;
 
 #[derive(Debug, thiserror::Error)]
 #[error("an allocation error occurred")]
@@ -59,7 +58,10 @@ pub unsafe trait Allocator: Sized {
 
     fn allocate_uninit<'a, T>(&'a self) -> Result<AllocPtr<'a, MaybeUninit<T>, Self>, AllocError>;
 
-    fn allocate_zeroed<'a, T: FromZeros>(&'a self) -> Result<AllocPtr<'a, T, Self>, AllocError>;
+    #[cfg(feature = "zerocopy")]
+    fn allocate_zeroed<'a, T: zerocopy::FromZeros>(
+        &'a self,
+    ) -> Result<AllocPtr<'a, T, Self>, AllocError>;
 
     fn allocate_slice<'a, T>(&'a self) -> Result<AllocPtr<'a, [MaybeUninit<T>], Self>, AllocError>;
 
