@@ -19,6 +19,10 @@ pub struct AllocPtr<'a, T: ?Sized, A: Allocator> {
 }
 
 impl<T: ?Sized, A: Allocator> AllocPtr<'_, T, A> {
+    /// # Safety
+    ///
+    /// - `obj` must be a dereferencable as `T`.
+    /// - `allocator` must be the [`Allocator`] that `obj` was allocated from.
     pub unsafe fn new(obj: NonNull<T>, allocator: A) -> Self {
         Self {
             obj,
@@ -51,20 +55,17 @@ impl<'a, T: ?Sized, A: Allocator> Drop for AllocPtr<'a, T, A> {
 }
 
 pub unsafe trait Allocator: Sized {
-    type Error;
+    fn allocate<'a, T: Default>(&'a self) -> Result<AllocPtr<'a, T, Self>, AllocError>;
 
-    fn allocate<'a, T: Default>(&'a self) -> Result<AllocPtr<'a, T, Self>, Self::Error>;
+    fn allocate_uninit<'a, T>(&'a self) -> Result<AllocPtr<'a, MaybeUninit<T>, Self>, AllocError>;
 
-    fn allocate_uninit<'a, T>(&'a self) -> Result<AllocPtr<'a, MaybeUninit<T>, Self>, Self::Error>;
+    fn allocate_zeroed<'a, T: FromZeros>(&'a self) -> Result<AllocPtr<'a, T, Self>, AllocError>;
 
-    fn allocate_zeroed<'a, T: FromZeros>(&'a self) -> Result<AllocPtr<'a, T, Self>, Self::Error>;
-
-    fn allocate_slice<'a, T>(&'a self)
-    -> Result<AllocPtr<'a, [MaybeUninit<T>], Self>, Self::Error>;
+    fn allocate_slice<'a, T>(&'a self) -> Result<AllocPtr<'a, [MaybeUninit<T>], Self>, AllocError>;
 
     fn allocate_uninit_slice<'a, T>(
         &'a self,
-    ) -> Result<AllocPtr<'a, [MaybeUninit<T>], Self>, Self::Error>;
+    ) -> Result<AllocPtr<'a, [MaybeUninit<T>], Self>, AllocError>;
 
     unsafe fn deallocate<'a, 'b: 'a, T: ?Sized>(&'a self, alloc_ptr: &AllocPtr<'b, T, Self>);
 }
